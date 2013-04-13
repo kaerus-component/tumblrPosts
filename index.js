@@ -28,8 +28,8 @@ TumblrPosts.prototype.dateFormat = function(format,i18n){
 	return this;
 }
 
-TumblrPosts.prototype.date = function(date,i18n){
-	return this._time(this._format,new Date(Date(date)),i18n);
+TumblrPosts.prototype.date = function(date){
+	return this._time(this._format,new Date(date*1000));
 }
 
 function mergeOptions(target,source){
