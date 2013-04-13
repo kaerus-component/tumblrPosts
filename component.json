@@ -1,0 +1,11 @@
+{  
+    "name": "tumblrPosts",
+    "version": "0.1.0",
+    "description": "Tumblr posts",
+    "repo": "kaerus-component/tumblrPosts",
+    "scripts": ["index.js"],
+    "dependencies":{
+        "kaerus-component/tumblr":"*",
+        "samsonjs/strftime":"*"
+    }
+}

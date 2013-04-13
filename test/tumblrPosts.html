@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<head>
+	<title>Tumblr test</title>
+</head>
+<body>
+	<div id="tumblr"></div>
+
+	<script src="../build/build.js"></script>
+	<script>
+		var Tumblr = require('tumblrPosts'),
+			posts = new Tumblr('tiinity.tumblr.com','tol2xOQb3HaQgNaIRaAaC1twwk8UxQAE8aPejTosWCMYDbeLfK');
+		
+		
+		posts.target('tumblr').get({limit:5})
+			.then(function(data){
+				posts.render(data.response.posts);
+			},function(error){
+				posts.render(error);
+			}
+		);
+
+	</script>
+</body>
+</html>
