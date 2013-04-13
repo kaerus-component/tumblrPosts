@@ -40,6 +40,16 @@ function mergeOptions(target,source){
     return target;
 }
 
+function altSizeUrl(alts,size){
+	var l = alts.length-1, s = size > l ? l : size;
+	return alts[s].url;
+}
+
+function playerSizeEmbed(player,size){
+	var l = players.length-1, s = size > l ? l : size;
+	return players[s].embed_code;
+}
+
 TumblrPosts.prototype.render = function(posts,options){
 
 	var post;
@@ -48,49 +58,55 @@ TumblrPosts.prototype.render = function(posts,options){
 
 	options = mergeOptions({player:{size:0}, photo:{size:0}},options);
 
-	var html = '<ul class="tumblr">\n';
+	var html = '';
 
 	for(var i = 0, l = posts.length; i < l; i++){
 		post = posts[i];
 
-		html+= '<li class="'+post.type+'">\n';
-		html+='<h4>'+this.date(post.timestamp)+'</h4>\n';
+		if(['text','photo','video','audio'].indexOf(post.type)<0) continue;
+
+		html+= '<article class="'+post.type+'">\n';
+		html+='<header>\n';
+		html+='<time datetime="'+ post.date +'">'+this.date(post.timestamp)+'</time>\n';
 
 		switch(post.type){
 			case 'text':
-				html+='<caption><h2>'+post.title+'</h2></caption>\n';
+				html+=post.title+'\n';
+				html+='</header>\n';
 				html+='<span>'+post.body+'</span>';
 
 				break;
 			case 'photo':
-				html+='<caption>'+post.caption+'</caption>\n';
-				html+='<span>\n';
+				html+=post.caption+'\n';
+				html+='</header>\n';
 
 				post.photos.forEach(function(photo){
-					html+='<img src="'+photo.alt_sizes[options.photo.size].url+'">\n';
+					html+='<figure>\n';
+					html+='<img src="'+altSizeUrl(photo.alt_sizes,options.photo.size)+'">\n';
+					if(photo.caption) html+='<figcaption>'+photo.caption+'</figcaption>\n';
+					html+='</figure>';
 				});
-
-				html+='</span>\n';
 
 				break;
 			case 'audio':
-				html+='<caption>'+post.caption+'</caption>\n';
+				html+=post.caption+'\n';
+				html+='</header>\n';
 				html+='<span>'+post.embed+'</span>\n';
 				break;
 			case 'video':
-				html+='<caption>'+post.caption+'</caption>\n';
+				html+=post.caption+'\n';
+				html+='</header>\n';
 				html+='<span>\n';
-				html+=post.player[options.player.size].embed_code;
+				html+=playerSizeEmbed(post.player,options.player.size).embed_code;
 				html+='</span>\n';
-				break;
-			default:
-				console.log("Ignoring post type:", post.type);					
+				break;				
 		}
+		
+		if(post.tags.length) 
+			html+='<footer>'+post.tags.join(' ')+'</footer>';
 
-		html+= '</li>\n';
+		html+= '</article>\n';
 	} 
-
-	html+= '</ul>\n';
 
 	this.elem.innerHTML = html;
 
