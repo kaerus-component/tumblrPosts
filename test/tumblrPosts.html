@@ -9,8 +9,7 @@
 	<script src="../build/build.js"></script>
 	<script>
 		var Tumblr = require('tumblrPosts'),
-			posts = new Tumblr('tiinity.tumblr.com','tol2xOQb3HaQgNaIRaAaC1twwk8UxQAE8aPejTosWCMYDbeLfK');
-		
+			posts = new Tumblr('user','<api key>');
 		
 		posts.target('tumblr').get({limit:5})
 			.then(function(data){
