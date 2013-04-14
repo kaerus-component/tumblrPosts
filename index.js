@@ -1,5 +1,5 @@
 var Tumblr = require('tumblr'),
-	strftime = require('strftime');
+strftime = require('strftime');
 
 function TumblrPosts(user,key){
 	this.tumblr = new Tumblr(user,key);
@@ -45,7 +45,7 @@ function altSizeUrl(alts,size){
 	return alts[s].url;
 }
 
-function playerSizeEmbed(player,size){
+function playerSizeEmbed(players,size){
 	var l = players.length-1, s = size > l ? l : size;
 	return players[s].embed_code;
 }
@@ -60,7 +60,7 @@ TumblrPosts.prototype.render = function(posts,options){
 
 	var html = '';
 
-	for(var i = 0, l = posts.length; i < l; i++){
+    for(var i = 0, l = posts.length; i < l; i++){
 		post = posts[i];
 
 		if(['text','photo','video','audio'].indexOf(post.type)<0) continue;
@@ -71,46 +71,48 @@ TumblrPosts.prototype.render = function(posts,options){
 
 		switch(post.type){
 			case 'text':
-				html+=post.title+'\n';
-				html+='</header>\n';
-				html+='<span>'+post.body+'</span>';
+                html+=post.title+'\n';
+                html+='</header>\n';
+                html+='<span>'+post.body+'</span>';
 
-				break;
-			case 'photo':
-				html+=post.caption+'\n';
-				html+='</header>\n';
+                break;
+            case 'photo':
+                html+=post.caption+'\n';
+                html+='</header>\n';
 
-				post.photos.forEach(function(photo){
-					html+='<figure>\n';
-					html+='<img src="'+altSizeUrl(photo.alt_sizes,options.photo.size)+'">\n';
-					if(photo.caption) html+='<figcaption>'+photo.caption+'</figcaption>\n';
-					html+='</figure>';
-				});
+                post.photos.forEach(function(photo){
+                    html+='<figure>\n';
+                    html+='<img src="'+altSizeUrl(photo.alt_sizes,options.photo.size)+'">\n';
+                    if(photo.caption) html+='<figcaption>'+photo.caption+'</figcaption>\n';
+                    html+='</figure>';
+                });
 
-				break;
-			case 'audio':
-				html+=post.caption+'\n';
-				html+='</header>\n';
-				html+='<span>'+post.embed+'</span>\n';
-				break;
-			case 'video':
-				html+=post.caption+'\n';
-				html+='</header>\n';
-				html+='<span>\n';
-				html+=playerSizeEmbed(post.player,options.player.size).embed_code;
-				html+='</span>\n';
-				break;				
-		}
-		
-		if(post.tags.length) 
-			html+='<footer>'+post.tags.join(' ')+'</footer>';
+                break;
+            case 'audio':
+                html+=post.caption+'\n';
+                html+='</header>\n';
+                html+='<span>'+post.embed+'</span>\n';
+                
+                break;
+            case 'video':
+                html+=post.caption+'\n';
+                html+='</header>\n';
+                html+='<span>\n';
+                html+=playerSizeEmbed(post.player,options.player.size);
+                html+='</span>\n';
+                
+                break;				
+        }
 
-		html+= '</article>\n';
-	} 
+        if(post.tags.length) 
+            html+='<footer>'+post.tags.join(' ')+'</footer>\n';
 
-	this.elem.innerHTML = html;
+        html+= '</article>\n';
+    } 
 
-	return this;
+    this.elem.innerHTML = html;
+
+    return this;
 }	
 
 module.exports = TumblrPosts;
