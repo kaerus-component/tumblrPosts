@@ -6,10 +6,6 @@
 <body>
 	<section id="tumblr" class="posts">
 	</section>
-	<footer>
-		<div id="back">[Previous posts]<div>
-		<div id="more">[More posts]<div>
-	</footer>
 	<style type="text/css">
 		* {margin:0;padding:0;}
 
@@ -44,14 +40,12 @@
 			margin-top: 1em;
 		}
 
-
-
 	</style>
 	
 	<script src="../build/build.js"></script>
 	<script>
 		var Tumblr = require('tumblrPosts'),
-			tumblr = new Tumblr('tiinity','tol2xOQb3HaQgNaIRaAaC1twwk8UxQAE8aPejTosWCMYDbeLfK');
+			tumblr = new Tumblr('yourblog','<api_key>');
 		
 		tumblr.posts.target('tumblr').fetch();
 
