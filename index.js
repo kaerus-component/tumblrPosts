@@ -24,7 +24,7 @@ function TumblrPosts(options){
     }
 
     self.size = function(options){
-        mergeOptions(this._sizes,options);
+        mergeOptions(this._size,options);
 
         return this;
     }
