@@ -1,6 +1,6 @@
 {  
     "name": "tumblrPosts",
-    "version": "0.1.5",
+    "version": "0.1.8",
     "description": "Tumblr posts",
     "repo": "kaerus-component/tumblrPosts",
     "scripts": ["index.js"],

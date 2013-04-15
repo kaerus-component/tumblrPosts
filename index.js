@@ -36,7 +36,13 @@ function TumblrPosts(options){
     }
 
     self.offset = function(offset){
-        this._offset = offset;
+        if(offset === true)
+            this._offset+= this._limit;
+        else if(offset === false)
+            this._offset-= this._limit;
+        else this._offset = offset;
+
+        if(this._offset < 0) this._offset = 0;
 
         return this;
     }
@@ -60,29 +66,73 @@ function TumblrPosts(options){
         return this._time(this._format,new Date(date*1000));
     }
 
-    self.fetch = function(options,requestOptions){
+    self.hasNext = function(){
+        return self.total && self.total > self._offset + self._limit;
+    }
+
+    self.hasPrevious = function(){
+        return self.total && self._offset > 0;
+    }
+
+    self.onError = function(reason){
+        console.log("Error: ", reason)   
+    }
+
+    self.fetch = function(){
+        var i = 0, target, options, requestOptions; 
+
+        if(typeof arguments[i] === 'function') target = arguments[i++];
+        else if(typeof arguments[i] === 'string') target = arguments[i++];
+        else if(typeof arguments[i] === 'object' && arguments[i].nodeType) target = arguments[i++];
+        else target = this.elem;
+
+        if(typeof arguments[i] === 'object') options = arguments[i++];
+        if(typeof arguments[i] === 'object') requestOptions = arguments[i++];
+
         this.get(options,requestOptions)
             .then(function(data){
-                self.render(data.response.posts);
+                self.total = data.response.total_posts;
+                
+                self.next = function(){ 
+                    self.offset(true);
+                    self.fetch(target,options,requestOptions) 
+                };
+
+                self.previous = function(){
+                    self.offset(false); 
+                    self.fetch(target,options,requestOptions);
+                };
+
+                try{
+                    self.render(target,data.response);
+                } catch(error){
+                    self.onError(error);
+                }   
+
             },function(error){
-                self.render(error);
+                self.onError((error.message||(error.meta && error.meta.msg)||error.code||'?'));
             }
         );  
 
         return this;    
     }
 
-    self.render = function(posts,size){
-        var post;
-        
+    self.render = function(target,data,size){
+        if(typeof target === 'string'){
+            target = document.getElementById(container);
+        }
+
+        if(!target) throw new Error("Tumblr posts invalid target");
+
+        var posts = data.posts;
+
         if(!Array.isArray(posts)) posts = [posts];
 
         size = mergeOptions(this._size,size);
 
         var html = '';
 
-        for(var i = 0, l = posts.length; i < l; i++){
-            post = posts[i];
+        for(var i = 0, post; post = posts[i]; i++){
 
             if(['text','photo','video','audio'].indexOf(post.type)<0) continue;
 
@@ -126,7 +176,10 @@ function TumblrPosts(options){
             html+= '</article>\n';
         } 
 
-        this.elem.innerHTML = html;
+        if(typeof target === 'function') {
+            target({html:html,data:data});
+        }    
+        else target.innerHTML = html;
 
         return this;
     }   

@@ -45,9 +45,16 @@
 	<script src="../build/build.js"></script>
 	<script>
 		var Tumblr = require('tumblrPosts'),
-			tumblr = new Tumblr('yourblog','<api_key>');
+			tumblr = new Tumblr('user','<key>');
 		
-		tumblr.posts.target('tumblr').fetch();
+		var target = document.getElementById('tumblr');
+
+		tumblr.posts.fetch(function(response){
+			console.log(response.data);
+			target.innerHTML = response.html; 
+		}).onError = function(message){
+			target.innerHTML = "Failed to retrieve posts: " + message; 
+		};	
 
 	</script>
 </body>
