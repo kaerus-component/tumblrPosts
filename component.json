@@ -7,5 +7,6 @@
     "dependencies":{
         "kaerus-component/tumblr":"*",
         "samsonjs/strftime":"*"
-    }
+    },
+    "license": "Apache2_0"
 }
