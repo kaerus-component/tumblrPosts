@@ -4,20 +4,56 @@
 	<title>Tumblr test</title>
 </head>
 <body>
-	<div id="tumblr"></div>
+	<section id="tumblr" class="posts">
+	</section>
+	<footer>
+		<div id="back">[Previous posts]<div>
+		<div id="more">[More posts]<div>
+	</footer>
+	<style type="text/css">
+		* {margin:0;padding:0;}
 
+		body { width: 40em;margin:0 auto;}
+
+		section.posts {
+			overflow: wrap;
+			border: 1px solid grey;
+		}
+
+		section.posts article {
+			padding: 1em;
+		}
+
+		section.posts article time {
+			float: right;
+		}
+
+		section.posts article.text p {
+			padding: 1em;
+		}
+
+		section.posts article.photo figure {
+			margin-top: 1em;
+		}
+
+		section.posts article.audio iframe {
+			margin-top: 1em;
+		}
+
+		section.posts article.video iframe {
+			margin-top: 1em;
+		}
+
+
+
+	</style>
+	
 	<script src="../build/build.js"></script>
 	<script>
 		var Tumblr = require('tumblrPosts'),
-			posts = new Tumblr('user','<api key>');
+			tumblr = new Tumblr('tiinity','tol2xOQb3HaQgNaIRaAaC1twwk8UxQAE8aPejTosWCMYDbeLfK');
 		
-		posts.target('tumblr').get({limit:5})
-			.then(function(data){
-				posts.render(data.response.posts);
-			},function(error){
-				posts.render(error);
-			}
-		);
+		tumblr.posts.target('tumblr').fetch();
 
 	</script>
 </body>

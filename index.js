@@ -1,35 +1,135 @@
 var Tumblr = require('tumblr'),
-strftime = require('strftime');
+    strftime = require('strftime');
 
-function TumblrPosts(user,key){
-	this.tumblr = new Tumblr(user,key);
 
-	this._time = strftime;
-	this._format = '%B %d, %Y %H:%M:%S';
-}
+function TumblrPosts(options){
+    var tumblr, self = this['posts'] = {};
 
-TumblrPosts.prototype.target = function(container){
-	if(typeof container === 'string')
-		this.elem = document.getElementById(container);
-	else this.elem = container;
+    this.plugin.push(function(){ tumblr = this });
 
-	return this;
-}
+    self._time = strftime;
 
-TumblrPosts.prototype.get = function(options,requestOptions){
-	return this.tumblr.get('posts',options,requestOptions);
-}
+    self._format = '%B %d, %Y %H:%M:%S';
 
-TumblrPosts.prototype.dateFormat = function(format,i18n){
-	this._format = format;
+    self._size = {player:0, photo:0};
 
-	if(i18n) this._time = strftime.localizedStrftime(i18n);
+    self._limit = 10;
 
-	return this;
-}
+    self._offset = 0;
 
-TumblrPosts.prototype.date = function(date){
-	return this._time(this._format,new Date(date*1000));
+    self.get = function(options,requestOptions){
+        options = mergeOptions({limit:this._limit,offset:this._offset},options);
+
+        return tumblr.get('posts',options,requestOptions);
+    }
+
+    self.size = function(options){
+        mergeOptions(this._sizes,options);
+
+        return this;
+    }
+
+    self.limit = function(limit){
+        this._limit = limit;
+
+        return this;
+    }
+
+    self.offset = function(offset){
+        this._offset = offset;
+
+        return this;
+    }
+
+    self.dateFormat = function(format,i18n){
+        this._format = format;
+        if(i18n) this._time = strftime.localizedStrftime(i18n);
+
+        return this;
+    }
+
+    self.target = function(container){
+        if(typeof container === 'string')
+            this.elem = document.getElementById(container);
+        else this.elem = container;
+
+        return this;
+    }
+
+    self.date = function(date){
+        return this._time(this._format,new Date(date*1000));
+    }
+
+    self.fetch = function(options,requestOptions){
+        this.get(options,requestOptions)
+            .then(function(data){
+                self.render(data.response.posts);
+            },function(error){
+                self.render(error);
+            }
+        );  
+
+        return this;    
+    }
+
+    self.render = function(posts,size){
+        var post;
+        
+        if(!Array.isArray(posts)) posts = [posts];
+
+        size = mergeOptions(this._size,size);
+
+        var html = '';
+
+        for(var i = 0, l = posts.length; i < l; i++){
+            post = posts[i];
+
+            if(['text','photo','video','audio'].indexOf(post.type)<0) continue;
+
+            html+= '<article class="'+post.type+'">\n';
+            html+='<time datetime="'+ post.date +'">'+this.date(post.timestamp)+'</time>\n';
+
+            switch(post.type){
+                case 'text':
+                    html+='<header>'+post.title+'</header>\n';
+                    html+='<span>'+post.body+'</span>';
+
+                    break;
+                case 'photo':
+                    html+='<header>'+post.caption+'</header>\n';
+
+                    post.photos.forEach(function(photo){
+                        html+='<figure>\n';
+                        html+='<img src="'+altSizeUrl(photo.alt_sizes,size)+'">\n';
+                        if(photo.caption) html+='<figcaption>'+photo.caption+'</figcaption>\n';
+                        html+='</figure>';
+                    });
+
+                    break;
+                case 'audio':
+                    html+='<header>'+post.caption+'</header>\n';
+                    html+='<span>'+post.embed+'</span>\n';
+                    
+                    break;
+                case 'video':
+                    html+='<header>'+post.caption+'</header>\n';
+                    html+='<span>\n';
+                    html+=playerSizeEmbed(post.player,size);
+                    html+='</span>\n';
+                    
+                    break;              
+            }
+
+            if(post.tags.length) 
+                html+='<footer>'+post.tags.join(' ')+'</footer>\n';
+
+            html+= '</article>\n';
+        } 
+
+        this.elem.innerHTML = html;
+
+        return this;
+    }   
 }
 
 function mergeOptions(target,source){
@@ -41,78 +141,15 @@ function mergeOptions(target,source){
 }
 
 function altSizeUrl(alts,size){
-	var l = alts.length-1, s = size > l ? l : size;
+	var l = alts.length-1, s = size.photo > l ? l : size.photo;
 	return alts[s].url;
 }
 
 function playerSizeEmbed(players,size){
-	var l = players.length-1, s = size > l ? l : size;
+	var l = players.length-1, s = size.player > l ? l : size.player;
 	return players[s].embed_code;
 }
 
-TumblrPosts.prototype.render = function(posts,options){
+TumblrPosts.call(Tumblr.prototype);
 
-	var post;
-	
-	if(!Array.isArray(posts)) posts = [posts];
-
-	options = mergeOptions({player:{size:0}, photo:{size:0}},options);
-
-	var html = '';
-
-    for(var i = 0, l = posts.length; i < l; i++){
-		post = posts[i];
-
-		if(['text','photo','video','audio'].indexOf(post.type)<0) continue;
-
-		html+= '<article class="'+post.type+'">\n';
-		html+='<header>\n';
-		html+='<time datetime="'+ post.date +'">'+this.date(post.timestamp)+'</time>\n';
-
-		switch(post.type){
-			case 'text':
-                html+=post.title+'\n';
-                html+='</header>\n';
-                html+='<span>'+post.body+'</span>';
-
-                break;
-            case 'photo':
-                html+=post.caption+'\n';
-                html+='</header>\n';
-
-                post.photos.forEach(function(photo){
-                    html+='<figure>\n';
-                    html+='<img src="'+altSizeUrl(photo.alt_sizes,options.photo.size)+'">\n';
-                    if(photo.caption) html+='<figcaption>'+photo.caption+'</figcaption>\n';
-                    html+='</figure>';
-                });
-
-                break;
-            case 'audio':
-                html+=post.caption+'\n';
-                html+='</header>\n';
-                html+='<span>'+post.embed+'</span>\n';
-                
-                break;
-            case 'video':
-                html+=post.caption+'\n';
-                html+='</header>\n';
-                html+='<span>\n';
-                html+=playerSizeEmbed(post.player,options.player.size);
-                html+='</span>\n';
-                
-                break;				
-        }
-
-        if(post.tags.length) 
-            html+='<footer>'+post.tags.join(' ')+'</footer>\n';
-
-        html+= '</article>\n';
-    } 
-
-    this.elem.innerHTML = html;
-
-    return this;
-}	
-
-module.exports = TumblrPosts;
+module.exports = Tumblr;
